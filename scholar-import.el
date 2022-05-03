@@ -45,18 +45,30 @@
   :type 'string
   :group 'scholar-import)
 
+(defcustom scholar-import-before-hook nil
+  "A hook to run before importing new entry."
+  :group 'scholar-import
+  :type 'hook)
+
+(defcustom scholar-import-after-hook nil
+  "A hook to run after importing new entry."
+  :group 'scholar-import
+  :type 'hook)
+
 (defun scholar-import-add-entry (info)
   "Import data from Google Scholar via org-protocol."
   (let ((bibtexUrl (url-unhex-string (plist-get info :bibtexUrl)))
         (pdfUrl (plist-get info :pdfUrl)))
     (request
-      bibtexUrl
-      :parser #'buffer-string
-      ;; Google seems to block requests without a normal User-Agent
-      :headers '(("User-Agent" . "Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0"))
-      :success (cl-function
-                (lambda (&key data &allow-other-keys)
-                  (scholar-import--add-bibtex-pdf data pdfUrl))))))
+     bibtexUrl
+     :parser #'buffer-string
+     ;; Google seems to block requests without a normal User-Agent
+     :headers '(("User-Agent" . "Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0"))
+     :success (cl-function
+               (lambda (&key data &allow-other-keys)
+                 (run-hooks 'scholar-import-before-hook)
+                 (scholar-import--add-bibtex-pdf data pdfUrl)
+                 (run-hooks 'scholar-import-after-hook))))))
 
 (defun scholar-import--add-bibtex-pdf (bibtex pdfUrl)
   "Add a Bibtex entry, download PDF and create TO-READ Org item."
