@@ -3,7 +3,7 @@
 ;; Author: Anh T Nguyen <https://github.com/teeann>
 ;; License: GPL-3.0-or-later
 ;; Version: 0.1
-;; Package-Requires: ((emacs "26.1") (org "9.0") (request "0.3.2"))
+;; Package-Requires: ((emacs "26.1") (org "9.0") (request "0.3.2") (s "1.10.0"))
 ;; Homepage: https://github.com/teeann/scholar-import
 
 ;; This file is not part of GNU Emacs
@@ -32,7 +32,7 @@
 (require 'request)
 
 (defgroup scholar-import nil
-  "Emacs package to import Bibtex & PDF from Google Scholar"
+  "Emacs package to import Bibtex & PDF from Google Scholar."
   :group 'tools)
 
 (defcustom scholar-import-bibliography nil
@@ -56,7 +56,7 @@
   :type 'hook)
 
 (defun scholar-import-add-entry (info)
-  "Import data from Google Scholar via org-protocol."
+  "Import data from Google Scholar via org-protocol URL INFO."
   (let ((bibtexUrl (url-unhex-string (plist-get info :bibtexUrl)))
         (pdfUrl (plist-get info :pdfUrl)))
     (request
@@ -71,7 +71,7 @@
                  (run-hooks 'scholar-import-after-hook))))))
 
 (defun scholar-import--add-bibtex-pdf (bibtex pdfUrl)
-  "Add a Bibtex entry, download PDF and create TO-READ Org item."
+  "Add a BIBTEX entry and download document from PDFURL."
   (scholar-import--append-file bibtex scholar-import-bibliography)
   (let ((key (cadr (s-match "[^{]+{\\([^,]+\\)" bibtex))))
     (async-shell-command
