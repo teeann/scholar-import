@@ -1,5 +1,5 @@
 * scholar-import
-Emacs package to import Bibtex &amp; PDF from Google Scholar
+Emacs package to import Bibtex & PDF from Google Scholar
 ** Installation
 1. Install Firefox extension [[https://github.com/teeann/Scholar-to-Emacs][Scholar-to-Emacs]]
 2. Install this package via MELPA
