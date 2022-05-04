@@ -30,6 +30,7 @@
 
 (require 'org-protocol)
 (require 'request)
+(require 's)
 
 (defgroup scholar-import nil
   "Emacs package to import Bibtex & PDF from Google Scholar."
@@ -89,7 +90,7 @@
   "Append TEXT to the end of a given FILE."
   (save-excursion
     (with-temp-buffer
-      (insert-file file)
+      (insert-file-contents file)
       (goto-char (point-max))
       (insert text)
       (write-file file))))
