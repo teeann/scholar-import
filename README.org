@@ -4,8 +4,6 @@ Emacs package to import Bibtex &amp; PDF from Google Scholar
 1. Install Firefox extension [[https://github.com/teeann/Scholar-to-Emacs][Scholar-to-Emacs]]
 2. Install this package via MELPA
 3. Set =scholar-import-bibliography= and =scholar-import-library-path=
-** Prerequisites
-This package requires =wget= for downloading PDF files.
 ** Integration with other Emacs packages
 *** Citar
 #+begin_src emacs-lisp

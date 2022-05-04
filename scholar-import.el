@@ -55,27 +55,35 @@
   :group 'scholar-import
   :type 'hook)
 
+(defcustom scholar-import-user-process-function nil
+  "A hook to run after importing new entry."
+  :group 'scholar-import
+  :type 'function)
+
 (defun scholar-import-add-entry (info)
   "Import data from Google Scholar via org-protocol URL INFO."
   (let ((bibtexUrl (url-unhex-string (plist-get info :bibtexUrl)))
         (pdfUrl (plist-get info :pdfUrl)))
     (request
-     bibtexUrl
-     :parser #'buffer-string
-     ;; Google seems to block requests without a normal User-Agent
-     :headers '(("User-Agent" . "Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0"))
-     :success (cl-function
-               (lambda (&key data &allow-other-keys)
-                 (run-hooks 'scholar-import-before-hook)
-                 (scholar-import--add-bibtex-pdf data pdfUrl)
-                 (run-hooks 'scholar-import-after-hook))))))
+      bibtexUrl
+      :parser #'buffer-string
+      ;; Google seems to block requests without a normal User-Agent
+      :headers '(("User-Agent" . "Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0"))
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  (scholar-import--add-bibtex-pdf data pdfUrl))))))
 
 (defun scholar-import--add-bibtex-pdf (bibtex pdfUrl)
   "Add a BIBTEX entry and download document from PDFURL."
-  (scholar-import--append-file bibtex scholar-import-bibliography)
-  (let ((key (cadr (s-match "[^{]+{\\([^,]+\\)" bibtex))))
-    (async-shell-command
-     (format "wget -U chrome \"%s\" -O %s%s.pdf" pdfUrl scholar-import-library-path key))))
+  (let* ((key (cadr (s-match "[^{]+{\\([^,]+\\)" bibtex)))
+         (dest (concat (file-name-as-directory scholar-import-library-path) key ".pdf")))
+    (run-hooks 'scholar-import-before-hook)
+    (scholar-import--append-file bibtex scholar-import-bibliography)
+    ;; TODO download documents asynchronously
+    (url-copy-file pdfUrl dest)
+    (if (functionp scholar-import-user-process-function)
+        (funcall scholar-import-user-process-function key pdfUrl))
+    (run-hooks 'scholar-import-after-hook)))
 
 (defun scholar-import--append-file (text file)
   "Append TEXT to the end of a given FILE."
