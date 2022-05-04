@@ -57,7 +57,9 @@
   :type 'hook)
 
 (defcustom scholar-import-user-process-function nil
-  "A hook to run after importing new entry."
+  "Optional function to further process Bibtex entries & PDF files.
+  
+The argument list of this function should be (bibtexKey, pdfURL)."
   :group 'scholar-import
   :type 'function)
 
