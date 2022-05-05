@@ -12,7 +12,7 @@ Emacs package to import Bibtex & PDF from Google Scholar
   (require 'citar)
   (add-hook 'scholar-import-after-hook #'citar-refresh)
   (setq scholar-import-bibliography citar-bibliography
-        scholar-library-path (car citar-library-paths)))
+        scholar-import-library-path (car citar-library-paths)))
 #+end_src
 *** Helm-bibtex & Org-ref
 #+begin_src emacs-lisp
@@ -21,7 +21,7 @@ Emacs package to import Bibtex & PDF from Google Scholar
   :config
   ;; change accordingly if these bibtex variables are lists
   (setq scholar-import-bibliography bibtex-completion-bibliography
-        scholar-library-path bibtex-completion-library-path))
+        scholar-import-library-path bibtex-completion-library-path))
 #+end_src
 ** Usage
 Simply click /Import to Emacs/ link on Google Scholar will import Bibtex and PDF data to the Emacs side.
