@@ -9,8 +9,6 @@ Emacs package to import Bibtex & PDF from Google Scholar
 #+begin_src emacs-lisp
 (use-package scholar-import
   :config
-  (require 'citar)
-  (add-hook 'scholar-import-after-hook #'citar-refresh)
   (setq scholar-import-bibliography citar-bibliography
         scholar-import-library-path (car citar-library-paths)))
 #+end_src
