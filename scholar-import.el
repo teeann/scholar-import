@@ -3,7 +3,7 @@
 ;; Author: Anh T Nguyen <https://github.com/teeann>
 ;; License: GPL-3.0-or-later
 ;; Version: 0.1
-;; Package-Requires: ((emacs "26.1") (org "9.0") (request "0.3.0") (s "1.10.0"))
+;; Package-Requires: ((emacs "26.1") (org "9.0") (request "0.3.0") (s "1.10.0")) (parsebib "4.2")
 ;; Homepage: https://github.com/teeann/scholar-import
 
 ;; This file is not part of GNU Emacs
@@ -31,6 +31,7 @@
 (require 'org-protocol)
 (require 'request)
 (require 's)
+(require 'parsebib)
 
 (defgroup scholar-import nil
   "Emacs package to import Bibtex & PDF from Google Scholar."
@@ -68,28 +69,42 @@ The argument list of this function should be (bibtexKey, pdfURL)."
   (let ((bibtexUrl (url-unhex-string (plist-get info :bibtexUrl)))
         (pdfUrl (plist-get info :pdfUrl)))
     (request
-     bibtexUrl
-     :parser #'buffer-string
-     ;; Google seems to block requests without a normal User-Agent
-     :headers '(("User-Agent" . "Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0"))
-     :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
-                           (message "Got error %S, please try to reload Google Scholar page" error-thrown)))
-     :success (cl-function
-               (lambda (&key data &allow-other-keys)
-                 (scholar-import--add-bibtex-pdf data pdfUrl))))))
+      bibtexUrl
+      :parser #'buffer-string
+      ;; Google seems to block requests without a normal User-Agent
+      :headers '(("User-Agent" . "Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0"))
+      :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                            (message "Got error %S, please try to reload Google Scholar page" error-thrown)))
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  (scholar-import--add-bibtex-pdf data pdfUrl))))))
+
+(defun scholar-import--check-duplicate-key (citekey bib-file)
+  (save-excursion
+    (with-temp-buffer
+      (find-file bib-file)
+      (widen)
+      (goto-char (point-min))
+      (not (re-search-forward
+            (concat "^@\\(" parsebib--bibtex-identifier
+                    "\\)[[:space:]]*[\\(\\{][[:space:]]*"
+                    (regexp-quote citekey) "[[:space:]]*,") nil t)))))
 
 (defun scholar-import--add-bibtex-pdf (bibtex pdfUrl)
   "Add a BIBTEX entry and download document from PDFURL."
   (let* ((key (cadr (s-match "[^{]+{\\([^,]+\\)" bibtex)))
          (dest (concat (file-name-as-directory scholar-import-library-path) key ".pdf")))
-    (run-hooks 'scholar-import-before-hook)
-    (scholar-import--append-file bibtex scholar-import-bibliography)
-    (async-start
-     (lambda () (url-copy-file pdfUrl dest t))
-     (lambda (result) (message (format "%s.pdf downloaded" key))))
-    (if (functionp scholar-import-user-process-function)
-        (funcall scholar-import-user-process-function key pdfUrl))
-    (run-hooks 'scholar-import-after-hook)))
+    (if (scholar-import--check-duplicate-key key scholar-import-bibliography)
+        (progn
+          (run-hooks 'scholar-import-before-hook)
+          (scholar-import--append-file bibtex scholar-import-bibliography)
+          (async-start
+           (lambda () (url-copy-file pdfUrl dest t))
+           (lambda (result) (message (format "%s.pdf downloaded" key))))
+          (if (functionp scholar-import-user-process-function)
+              (funcall scholar-import-user-process-function key pdfUrl))
+          (run-hooks 'scholar-import-after-hook))
+      (message "Duplicate Bibtex entry!"))))
 
 (defun scholar-import--append-file (text file)
   "Append TEXT to the end of a given FILE."
