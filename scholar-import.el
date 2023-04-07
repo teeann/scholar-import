@@ -3,7 +3,12 @@
 ;; Author: Anh T Nguyen <https://github.com/teeann>
 ;; License: GPL-3.0-or-later
 ;; Version: 0.1
-;; Package-Requires: ((emacs "26.1") (org "9.0") (request "0.3.0") (s "1.10.0")) (parsebib "4.2")
+;; Package-Requires: (
+;;     (emacs "26.1")
+;;     (org "9.0")
+;;     (request "0.3.0")
+;;     (s "1.10.0")
+;;     (parsebib "4.2"))
 ;; Homepage: https://github.com/teeann/scholar-import
 
 ;; This file is not part of GNU Emacs
