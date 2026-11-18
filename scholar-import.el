@@ -103,9 +103,12 @@ The argument list of this function should be (bibtexKey, pdfURL)."
         (progn
           (run-hooks 'scholar-import-before-hook)
           (scholar-import--append-file bibtex scholar-import-bibliography)
-          (async-start
-           (lambda () (url-copy-file pdfUrl dest t))
-           (lambda (result) (message (format "%s.pdf downloaded" key))))
+          (if (and pdfUrl (string-match-p "\\`https?://" pdfUrl))
+              (async-start
+               (lambda () (url-copy-file pdfUrl dest t))
+               (lambda (result) (message (format "%s.pdf downloaded" key))))
+            (message "scholar-import: no downloadable PDF link for %s (got %S), skipping"
+                      key pdfUrl))
           (if (functionp scholar-import-user-process-function)
               (funcall scholar-import-user-process-function key pdfUrl))
           (run-hooks 'scholar-import-after-hook))
